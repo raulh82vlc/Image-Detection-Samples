@@ -24,8 +24,9 @@ Support SDKs from **21** to **25**
 
 # References:
 - [Tutorial of OpenCV](http://www.learnopencv.com/image-recognition-and-object-detection-part1/) by Satya Mallick
+- [OpenCV Face detection sample app](https://github.com/opencv/opencv/tree/master/samples/android/face-detection) by OpenCV
 - [OpenCV for Secret Agents](https://www.packtpub.com/application-development/opencv-secret-agents) by Joseph Howse
-- [Android Camera 2 Basic](https://github.com/googlesamples/android-Camera2Basic) by Google
+- [Android Camera 2 Basic sample app](https://github.com/googlesamples/android-Camera2Basic) by Google
 
 ## About the author
 **Raul Hernandez Lopez**,
