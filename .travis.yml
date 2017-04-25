@@ -1,0 +1,34 @@
+language: android
+jdk: oraclejdk8
+notifications:
+    email:
+        - raul.h82@gmail.com
+env:
+  matrix:
+    - ANDROID_TARGET=android-21 ANDROID_ABI=armeabi-v7a
+    - ANDROID_TARGET=android-25 ANDROID_ABI=armeabi-v7a
+  global:
+    - ADB_INSTALL_TIMEOUT=10    #Time out to 10 mins
+cache:
+  directories:      #Cache all dirs under .gradle folder
+    - $HOME/.gradle/daemon      #Cache daemon logs
+    - $HOME/.gradle/native      #Cache library downloaded from the gradle dependency
+    - $HOME/.gradle/wrapper     #Cache the gradle
+android:
+  update_sdk: true
+  components:
+    - tools
+    - platform-tools
+    - build-tools-25.0.0
+    - android-25
+    - extra-android-support
+    - extra-google-m2repository
+    - extra-android-m2repository
+    - sys-img-${ANDROID_ABI}-${ANDROID_TARGET}
+before_script:
+    - chmod +x gradlew      #Grand permissions
+script:
+  - echo "Travis branch is $TRAVIS_BRANCH"
+  - echo "Travis branch is in pull request $TRAVIS_PULL+REQUEST"
+  - ./gradlew clean build
+after_failure: "cat $TRAVIS_BUILD_DIR/app/build/outputs/lint-results-debug.xml"
