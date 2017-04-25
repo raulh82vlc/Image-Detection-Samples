@@ -8,8 +8,7 @@ The first one is *OpenCV* based and the second one is by means of *Camera 2 API*
 This sample supplies few Augmented reality things.
 
 ### Screenshots
-![Screencast UX](./art/camera2.gif)
-![Screencast UX](./art/opencv.gif)
+![Screencast UX](./art/openCV.gif)![Screencast UX](./art/camera2.gif)
 
 ### Features
 - _Sample 1_ uses *OpenCV* with its camera widget, in addition to detecting face or eyes as well as rendering basic graphics to show areas recognised.
