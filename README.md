@@ -3,8 +3,9 @@
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
 
-This sample app supports *Quest of a Hero* presentation
-as well as it has two different possibilities to make face detection and recognition.
+This sample app supports *Quest of a Hero* presentation:
+- [Quest of a hero presentation slides @ Londroid April 2017](https://speakerdeck.com/raulh82vlc/quest-of-a-hero-at-londroid-april-2017)
+- As well as it has two different possibilities to make face detection and recognition.
 The first one is *OpenCV* based and the second one is by means of *Camera 2 API*
 This sample supplies few Augmented reality things.
 
