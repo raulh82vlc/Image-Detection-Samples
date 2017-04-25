@@ -28,6 +28,9 @@ Support SDKs from **21** to **25**
 - [OpenCV for Secret Agents](https://www.packtpub.com/application-development/opencv-secret-agents) by Joseph Howse
 - [Android Camera 2 Basic sample app](https://github.com/googlesamples/android-Camera2Basic) by Google
 
+### Contributions
+Please read first [CONTRIBUTING](./CONTRIBUTING.md)
+
 ## About the author
 **Raul Hernandez Lopez**,
 - [Insights and projects (Personal projects blog)](https://raulh82vlc.github.io/)
