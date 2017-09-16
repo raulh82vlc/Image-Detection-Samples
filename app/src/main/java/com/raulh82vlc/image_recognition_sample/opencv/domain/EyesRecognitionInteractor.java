@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.domain;
+package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
 import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
 
@@ -22,18 +22,21 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 /**
- * Face Recognition interactor contract for a Face recognition Use case
+ * Eyes Recognition interactor contract for eyes recognition use case
  * @author Raul Hernandez Lopez
  */
 
-public interface FaceRecognitionInteractor {
-    void execute(Mat gray, FaceCallback callback);
+public interface EyesRecognitionInteractor {
+    void execute(Mat matrixGray, Mat matrixRGBA, Rect face, EyesCallback callback);
 
     /**
-     * Face Callback used when OpenCV returns a face and this was transformed to {@link RecognisedFace}
+     * <p>Eyes Callback used when OpenCV returns a satisfactory eyes recognition
+     * as a future improvement, could be passed the structure {@link RecognisedFace} with the eyes inside
+     * by decoupling the code futher</p>
+     *
      * @author Raul Hernandez Lopez.
      */
-    interface FaceCallback {
-        void onFaceRecognised(Rect faceOpenCV, RecognisedFace face);
+    interface EyesCallback {
+        void onEyesRecognised();
     }
 }

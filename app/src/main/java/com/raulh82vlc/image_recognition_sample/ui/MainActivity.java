@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.ui.activity;
+package com.raulh82vlc.image_recognition_sample.ui;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -23,6 +23,8 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.raulh82vlc.ar_imagerecognition_sample.R;
+import com.raulh82vlc.image_recognition_sample.camera2.ui.FDCamera2Activity;
+import com.raulh82vlc.image_recognition_sample.opencv.ui.FDOpenCVActivity;
 
 /**
  * Main menu activity

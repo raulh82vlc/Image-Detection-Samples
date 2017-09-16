@@ -14,14 +14,26 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.presentation;
+package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
 import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
 
+import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+
 /**
- * Camera Face Callback used when Camera 2 API returns a face and this was transformed to {@link RecognisedFace}
- * @author Raul Hernandez Lopez.
+ * Face Recognition interactor contract for a Face recognition Use case
+ * @author Raul Hernandez Lopez
  */
-public interface CameraFaceCallback {
-    void onFaceRecognised(RecognisedFace face);
+
+public interface FaceRecognitionInteractor {
+    void execute(Mat gray, FaceCallback callback);
+
+    /**
+     * Face Callback used when OpenCV returns a face and this was transformed to {@link RecognisedFace}
+     * @author Raul Hernandez Lopez.
+     */
+    interface FaceCallback {
+        void onFaceRecognised(Rect faceOpenCV, RecognisedFace face);
+    }
 }

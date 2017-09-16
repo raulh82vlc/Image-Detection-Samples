@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.ui.widgets;
+package com.raulh82vlc.image_recognition_sample.opencv.render;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;

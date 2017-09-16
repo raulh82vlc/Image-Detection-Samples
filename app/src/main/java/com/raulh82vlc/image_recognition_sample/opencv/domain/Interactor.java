@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.domain;
+package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
 /**
  * An interactor is a use case unit
