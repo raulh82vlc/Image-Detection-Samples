@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.presentation;
+package com.raulh82vlc.image_recognition_sample.camera2.presentation;
 
 import android.Manifest;
 import android.content.Context;
@@ -49,7 +49,7 @@ import android.util.SparseIntArray;
 import android.view.Surface;
 
 import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
-import com.raulh82vlc.image_recognition_sample.ui.activity.FDCamera2Activity;
+import com.raulh82vlc.image_recognition_sample.camera2.ui.FDCamera2Activity;
 import com.raulh82vlc.image_recognition_sample.ui.widgets.AutofitTextureView;
 
 import java.util.ArrayList;
@@ -101,6 +101,13 @@ public class FaceRecognitionCamera2Presenter {
     private Size imageDimension;
     private FDCamera2Activity camera2View;
     private CameraFaceCallback faceRecognisedCallback;
+
+    /**
+     * Camera Face Callback used when Camera 2 API returns a face and this was transformed to {@link RecognisedFace}
+     */
+    public interface CameraFaceCallback {
+        void onFaceRecognised(RecognisedFace face);
+    }
 
     public FaceRecognitionCamera2Presenter(Handler handler) {
         mainHandler = handler;

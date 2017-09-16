@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.ui.widgets;
+package com.raulh82vlc.image_recognition_sample.camera2.render;
 
 import android.content.Context;
 import android.graphics.Bitmap;

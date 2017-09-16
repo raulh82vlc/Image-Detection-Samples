@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.ui.activity;
+package com.raulh82vlc.image_recognition_sample.camera2.ui;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
@@ -27,16 +27,15 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.raulh82vlc.ar_imagerecognition_sample.R;
+import com.raulh82vlc.image_recognition_sample.camera2.render.FaceDrawer;
 import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
-import com.raulh82vlc.image_recognition_sample.presentation.CameraFaceCallback;
-import com.raulh82vlc.image_recognition_sample.presentation.FaceRecognitionCamera2Presenter;
+import com.raulh82vlc.image_recognition_sample.camera2.presentation.FaceRecognitionCamera2Presenter;
 import com.raulh82vlc.image_recognition_sample.ui.widgets.AutofitTextureView;
-import com.raulh82vlc.image_recognition_sample.ui.widgets.FaceDrawer;
 
 /**
  * Activity meant to be the UI point to show information to the user through Camera 2 API
  */
-public class FDCamera2Activity extends Activity implements CameraFaceCallback {
+public class FDCamera2Activity extends Activity implements FaceRecognitionCamera2Presenter.CameraFaceCallback {
 
     private static final String TAG = FDCamera2Activity.class.getSimpleName();
     // CONSTANTS

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.raulh82vlc.image_recognition_sample.domain;
+package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
 import android.os.Handler;
 
-import com.raulh82vlc.image_recognition_sample.ui.widgets.FaceDrawerOpenCV;
+import com.raulh82vlc.image_recognition_sample.opencv.render.FaceDrawerOpenCV;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
  * Eyes Recognition Interactor implementation of the {@link EyesRecognitionInteractor} contract
  * @author Raul Hernandez Lopez.
  */
-
 public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitionInteractor {
     public static final int LEARN_FRAMES_LIMIT = 250;
     public static final int LEARN_FRAMES_MATCH_EYE = 100;
