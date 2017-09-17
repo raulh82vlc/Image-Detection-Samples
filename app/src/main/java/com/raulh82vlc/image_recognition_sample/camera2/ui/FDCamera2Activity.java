@@ -19,8 +19,6 @@ package com.raulh82vlc.image_recognition_sample.camera2.ui;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.WindowManager;
@@ -28,14 +26,15 @@ import android.widget.Toast;
 
 import com.raulh82vlc.ar_imagerecognition_sample.R;
 import com.raulh82vlc.image_recognition_sample.camera2.render.FaceDrawer;
-import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
-import com.raulh82vlc.image_recognition_sample.camera2.presentation.FaceRecognitionCamera2Presenter;
+import com.raulh82vlc.image_recognition_sample.domain.MainThreadImpl;
+import com.raulh82vlc.image_recognition_sample.model.Face;
+import com.raulh82vlc.image_recognition_sample.camera2.presentation.FDCamera2Presenter;
 import com.raulh82vlc.image_recognition_sample.ui.widgets.AutofitTextureView;
 
 /**
- * Activity meant to be the UI point to show information to the user through Camera 2 API
+ * UI detection through Camera 2 API
  */
-public class FDCamera2Activity extends Activity implements FaceRecognitionCamera2Presenter.CameraFaceCallback {
+public class FDCamera2Activity extends Activity implements FDCamera2Presenter.View {
 
     private static final String TAG = FDCamera2Activity.class.getSimpleName();
     // CONSTANTS
@@ -43,7 +42,7 @@ public class FDCamera2Activity extends Activity implements FaceRecognitionCamera
 
     // UI
     private AutofitTextureView textureView;
-    private FaceRecognitionCamera2Presenter presenter;
+    private FDCamera2Presenter presenter;
     private FaceDrawer faceDrawer;
 
     @Override
@@ -71,7 +70,7 @@ public class FDCamera2Activity extends Activity implements FaceRecognitionCamera
         setContentView(R.layout.activity_face_detection);
 
         textureView = (AutofitTextureView) findViewById(R.id.texture);
-        presenter = new FaceRecognitionCamera2Presenter(new Handler(Looper.myLooper()));
+        presenter = new FDCamera2Presenter(new MainThreadImpl());
         presenter.setView(this, this);
         textureView.setSurfaceTextureListener(presenter.getListener());
         faceDrawer = (FaceDrawer) findViewById(R.id.face_drawer);
@@ -114,7 +113,12 @@ public class FDCamera2Activity extends Activity implements FaceRecognitionCamera
     }
 
     @Override
-    public void onFaceRecognised(RecognisedFace face) {
+    public void onFaceDetected(Face face) {
+        presenter.drawAR(face);
+    }
+
+    @Override
+    public void drawAR(Face face) {
         if (faceDrawer != null) {
             faceDrawer.drawFaceHear(face);
         }

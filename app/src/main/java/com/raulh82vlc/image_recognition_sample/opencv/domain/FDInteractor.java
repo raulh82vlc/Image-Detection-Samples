@@ -16,24 +16,24 @@
 
 package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
-import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
+import com.raulh82vlc.image_recognition_sample.model.Face;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 /**
- * Face Recognition interactor contract for a Face recognition Use case
+ * Face Detection interactor contract for a Face recognition Use case
  * @author Raul Hernandez Lopez
  */
 
-public interface FaceRecognitionInteractor {
+public interface FDInteractor {
     void execute(Mat gray, FaceCallback callback);
 
     /**
-     * Face Callback used when OpenCV returns a face and this was transformed to {@link RecognisedFace}
+     * Face Callback used when OpenCV returns a face and this was transformed to {@link Face}
      * @author Raul Hernandez Lopez.
      */
     interface FaceCallback {
-        void onFaceRecognised(Rect faceOpenCV, RecognisedFace face);
+        void onFaceDetected(Rect faceOpenCV, Face face);
     }
 }

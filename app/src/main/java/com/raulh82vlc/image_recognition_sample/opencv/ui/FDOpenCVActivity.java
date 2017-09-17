@@ -21,8 +21,6 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -30,7 +28,8 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.raulh82vlc.ar_imagerecognition_sample.R;
-import com.raulh82vlc.image_recognition_sample.opencv.presentation.FaceRecognitionOpenCVPresenter;
+import com.raulh82vlc.image_recognition_sample.domain.MainThreadImpl;
+import com.raulh82vlc.image_recognition_sample.opencv.presentation.FDOpenCVPresenter;
 import com.raulh82vlc.image_recognition_sample.opencv.render.FaceDrawerOpenCV;
 
 import org.opencv.android.CameraBridgeViewBase;
@@ -40,9 +39,9 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 /**
- * Activity meant to be the UI point to show information to the user through OpenCV library
+ * UI detection through through OpenCV library
  */
-public class FDOpenCVActivity extends Activity implements FaceRecognitionOpenCVPresenter.View {
+public class FDOpenCVActivity extends Activity implements FDOpenCVPresenter.View {
 
     private static final String TAG = FDOpenCVActivity.class.getSimpleName();
     // CONSTANTS
@@ -50,9 +49,7 @@ public class FDOpenCVActivity extends Activity implements FaceRecognitionOpenCVP
 
     private CameraBridgeViewBase openCvCameraView;
 
-    private FaceRecognitionOpenCVPresenter presenter;
-
-    private Handler mainHandler;
+    private FDOpenCVPresenter presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +71,7 @@ public class FDOpenCVActivity extends Activity implements FaceRecognitionOpenCVP
 
     private void initPresenter() {
         if (presenter == null) {
-            mainHandler = new Handler(Looper.myLooper());
-            presenter = new FaceRecognitionOpenCVPresenter(mainHandler, this);
+            presenter = new FDOpenCVPresenter(new MainThreadImpl(), this);
         }
     }
 
@@ -127,7 +123,6 @@ public class FDOpenCVActivity extends Activity implements FaceRecognitionOpenCVP
             openCvCameraView.disableView();
             openCvCameraView = null;
         }
-        mainHandler = null;
         presenter.onCameraViewStopped();
         presenter.cleanUp();
         presenter = null;
@@ -136,7 +131,12 @@ public class FDOpenCVActivity extends Activity implements FaceRecognitionOpenCVP
 
     @Override
     public void drawFace(Rect faceOpenCV, Mat rgbaMat) {
-        Log.i(TAG, "Face recognised and rendered");
+        Log.i(TAG, "Face detected and rendered");
         FaceDrawerOpenCV.drawFaceShapes(faceOpenCV, rgbaMat);
+    }
+
+    @Override
+    public void startEyesDetection(Rect faceOpenCV) {
+       presenter.detectEyes(faceOpenCV);
     }
 }

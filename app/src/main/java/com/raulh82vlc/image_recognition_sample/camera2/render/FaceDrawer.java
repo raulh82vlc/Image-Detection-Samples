@@ -28,7 +28,8 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.raulh82vlc.ar_imagerecognition_sample.R;
-import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
+import com.raulh82vlc.image_recognition_sample.camera2.render.model.MeasuresUI;
+import com.raulh82vlc.image_recognition_sample.model.Face;
 import com.raulh82vlc.image_recognition_sample.model.math.Square;
 
 import java.util.HashMap;
@@ -46,7 +47,7 @@ public class FaceDrawer extends View {
     public static final String KEY_BITMAP = "Goku_Sayan";
     private HashMap<String, Bitmap> mStore = new HashMap <>();
     private Paint paint;
-    private RecognisedFace face;
+    private Face face;
     private Paint paintMarker;
     private Rect rect;
     private Matrix transformation;
@@ -83,36 +84,33 @@ public class FaceDrawer extends View {
             Square faceShape = face.getFaceShape();
             int w =  faceShape.getWidth();
             int h =  faceShape.getHeight();
-            // Face AR mark
-            setMarker(faceShape, w, h);
-            canvas.drawRect(rect, paintMarker);
-
-            // Bitmap AR Super Sayan
-            Bitmap bmp = mStore.get(KEY_BITMAP);
-            if (bmp != null) {
-                int wBit = bmp.getWidth();
-                int hBit = bmp.getHeight();
-                setTransformation(w, h, wBit, hBit);
-                canvas.drawBitmap(bmp,
-                        transformation, paint);
-            }
+            drawFaceMarker(canvas, faceShape, w, h);
+            drawBitmapHairAR(canvas, w, h);
         }
     }
 
-    private void setTransformation(int w, int h, int wBit, int hBit) {
-        float scale;
-        float dx, dy;
-        if (wBit * h > w * hBit) {
-            scale = ((float) h / (float) hBit) * 2;
-            dx = (w - wBit * scale) * 0.5f;
-            dy = 0f;
-        } else {
-            scale = ((float) w / (float) wBit) * 2;
-            dy = (h - hBit * scale) * 0.5f;
-            dx = 0f;
+    private void drawBitmapHairAR(Canvas canvas, int w, int h) {
+        // Bitmap AR Super Sayan
+        Bitmap bmp = mStore.get(KEY_BITMAP);
+        if (bmp != null) {
+            int wBit = bmp.getWidth();
+            int hBit = bmp.getHeight();
+            setTransformation(w, h, wBit, hBit);
+            canvas.drawBitmap(bmp,
+                    transformation, paint);
         }
-        transformation.setScale(scale, scale);
-        transformation.postTranslate(dx, dy);
+    }
+
+    private void drawFaceMarker(Canvas canvas, Square faceShape, int w, int h) {
+        // Face AR mark
+        setMarker(faceShape, w, h);
+        canvas.drawRect(rect, paintMarker);
+    }
+
+    private void setTransformation(int w, int h, int wBit, int hBit) {
+        MeasuresUI measures = TransformationsHelper.calcMeasures(w, h, wBit, hBit);
+        transformation.setScale(measures.getScale(), measures.getScale());
+        transformation.postTranslate(measures.getDx(), measures.getDy());
     }
 
     private void setMarker(Square faceShape, int w, int h) {
@@ -126,7 +124,7 @@ public class FaceDrawer extends View {
         rect.set(left, top, right, bottom);
     }
 
-    public void drawFaceHear(RecognisedFace face) {
+    public void drawFaceHear(Face face) {
         this.face = face;
         invalidate();
     }

@@ -16,10 +16,11 @@
 
 package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
-import android.os.Handler;
 import android.util.Log;
 
-import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
+import com.raulh82vlc.image_recognition_sample.domain.InteractorExecutor;
+import com.raulh82vlc.image_recognition_sample.domain.MainThread;
+import com.raulh82vlc.image_recognition_sample.model.Face;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -27,32 +28,29 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.objdetect.CascadeClassifier;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 /**
- * Face Recognition implementation of {@link FaceRecognitionInteractor} contract
+ * Face Detection implementation of {@link FDInteractor} contract
  * @author Raul Hernandez Lopez.
  */
 
-public class FaceRecognitionInteractorImpl implements Interactor, FaceRecognitionInteractor {
+public class FDInteractorImpl implements Interactor, FDInteractor {
 
     private static final float RELATIVE_FACE_SIZE = 0.2f;
-    private static final String TAG = FaceRecognitionInteractor.class.getSimpleName();
+    private static final String TAG = FDInteractor.class.getSimpleName();
 
     private final CascadeClassifier detectorFace;
-    private final Handler mainThread;
+    private final MainThread mainThread;
 
     private MatOfRect faces;
-    private final Executor executorImageRecognition;
+    private final InteractorExecutor executorImageRecognition;
     private Mat matrixGray;
     private int absoluteFaceSize = 0;
     private FaceCallback faceCallback;
 
-    public FaceRecognitionInteractorImpl(CascadeClassifier detectorFace,
-                                     Handler mainThread) {
+    public FDInteractorImpl(CascadeClassifier detectorFace,
+                            MainThread mainThread, InteractorExecutor threadExecutor) {
         this.detectorFace = detectorFace;
-        executorImageRecognition =  Executors.newSingleThreadExecutor();
+        executorImageRecognition =  threadExecutor;
         this.mainThread = mainThread;
     }
 
@@ -101,15 +99,15 @@ public class FaceRecognitionInteractorImpl implements Interactor, FaceRecognitio
     }
 
     private void extractCharacteristics(Rect rect) {
-        notifyFaceFound(rect, new RecognisedFace(rect.x,
+        notifyFaceFound(rect, new Face(rect.x,
                 rect.y, rect.width, rect.height));
     }
 
-    private void notifyFaceFound(final Rect faceOpenCV, final RecognisedFace recognisedFace) {
+    private void notifyFaceFound(final Rect faceOpenCV, final Face face) {
         mainThread.post(new Runnable() {
             @Override
             public void run() {
-                faceCallback.onFaceRecognised(faceOpenCV, recognisedFace);
+                faceCallback.onFaceDetected(faceOpenCV, face);
             }
         });
     }
