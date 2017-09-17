@@ -1,4 +1,4 @@
-# Face Recognition samples with Augmented Reality (AR)
+# Face Detection samples with Augmented Reality (AR)
 [![Build Status](https://travis-ci.org/raulh82vlc/ImageRecognitionSamples.svg?branch=master)](https://travis-ci.org/raulh82vlc/ImageRecognitionSamples)
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
@@ -6,7 +6,7 @@
 This sample app supports
 - *Building a Minimum Viable Product (MVP) with Face recognition and AR in Android*
 - & [Quest of a hero presentation slides @ Londroid April 2017](https://speakerdeck.com/raulh82vlc/quest-of-a-hero-at-londroid-april-2017) presentation
-- As well as it has two different possibilities to make face detection and recognition.
+- As well as it has two different possibilities to create face detection mechanisms.
 The first one is *OpenCV* based and the second one is by means of *Camera 2 API*
 This sample supplies few Augmented reality things.
 
@@ -18,7 +18,7 @@ This sample supplies few Augmented reality things.
 
 ### Features
 - _Use case 1_ uses *OpenCV* with its camera widget, in addition to detecting face or eyes as well as rendering basic graphics to show areas recognised.
-- _Use case 2_ uses *Camera 2* for camera stream (using a TextureView for the preview), face detection and recognition. Then it uses a View with Canvas to render the augmented reality object.
+- _Use case 2_ uses *Camera 2* for camera stream (using a TextureView for the preview), face detection. Then it uses a View with Canvas to render the augmented reality object.
 
 ### SDK support
 Support SDKs from **21** to **25**
