@@ -16,27 +16,29 @@
 
 package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
-import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
+import com.raulh82vlc.image_recognition_sample.model.Face;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 /**
- * Eyes Recognition interactor contract for eyes recognition use case
+ * Eyes Detection interactor contract for eyes recognition use case
  * @author Raul Hernandez Lopez
  */
 
-public interface EyesRecognitionInteractor {
+public interface EyesDetectionInteractor {
     void execute(Mat matrixGray, Mat matrixRGBA, Rect face, EyesCallback callback);
+
+    void setRunningStatus(boolean isRunning);
 
     /**
      * <p>Eyes Callback used when OpenCV returns a satisfactory eyes recognition
-     * as a future improvement, could be passed the structure {@link RecognisedFace} with the eyes inside
+     * as a future improvement, could be passed the structure {@link Face} with the eyes inside
      * by decoupling the code futher</p>
      *
      * @author Raul Hernandez Lopez.
      */
     interface EyesCallback {
-        void onEyesRecognised();
+        void onEyesDetected();
     }
 }

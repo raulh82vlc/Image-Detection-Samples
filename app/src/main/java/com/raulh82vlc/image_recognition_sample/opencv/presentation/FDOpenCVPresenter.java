@@ -17,16 +17,18 @@
 package com.raulh82vlc.image_recognition_sample.opencv.presentation;
 
 import android.content.Context;
-import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceView;
 
 import com.raulh82vlc.ar_imagerecognition_sample.R;
-import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
-import com.raulh82vlc.image_recognition_sample.opencv.domain.EyesRecognitionInteractor;
-import com.raulh82vlc.image_recognition_sample.opencv.domain.EyesRecognitionInteractorImpl;
-import com.raulh82vlc.image_recognition_sample.opencv.domain.FaceRecognitionInteractor;
-import com.raulh82vlc.image_recognition_sample.opencv.domain.FaceRecognitionInteractorImpl;
+import com.raulh82vlc.image_recognition_sample.domain.InteractorExecutor;
+import com.raulh82vlc.image_recognition_sample.domain.InteractorPoolExecutor;
+import com.raulh82vlc.image_recognition_sample.domain.MainThread;
+import com.raulh82vlc.image_recognition_sample.model.Face;
+import com.raulh82vlc.image_recognition_sample.opencv.domain.EyesDetectionInteractor;
+import com.raulh82vlc.image_recognition_sample.opencv.domain.EyesDetectionInteractorImpl;
+import com.raulh82vlc.image_recognition_sample.opencv.domain.FDInteractor;
+import com.raulh82vlc.image_recognition_sample.opencv.domain.FDInteractorImpl;
 import com.raulh82vlc.image_recognition_sample.opencv.domain.FileHelper;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -40,26 +42,27 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Face Recognition Camera 2 Presenter decouples Camera 2 logic from activity
+ * Face Detection OpenCV Presenter decouples OpenCV logic from activity
  * @author Raul Hernandez Lopez.
  */
-public class FaceRecognitionOpenCVPresenter implements
-        FaceRecognitionInteractor.FaceCallback,
-        EyesRecognitionInteractor.EyesCallback,
+public class FDOpenCVPresenter implements
+        FDInteractor.FaceCallback,
+        EyesDetectionInteractor.EyesCallback,
         CameraBridgeViewBase.CvCameraViewListener2 {
 
-    public interface View {
-        void drawFace(Rect faceOpenCV, Mat face);
-    }
-    private static final String TAG = FaceRecognitionOpenCVPresenter.class.getSimpleName();
+    private static final String TAG = FDOpenCVPresenter.class.getSimpleName();
+
     private static final int CAMERA_ID_FRONT = 1;
+
     // Presentation
     private View view;
     // UIThread
-    private Handler mainHandler;
+    private final MainThread mainHandler;
+    // Thread pool
+    private final InteractorExecutor interactorExecutor;
     // Domain
-    private FaceRecognitionInteractor faceRecognitionInteractor;
-    private EyesRecognitionInteractor eyesRecognitionInteractor;
+    private FDInteractor fdInteractor;
+    private EyesDetectionInteractor eyesDetectionInteractor;
     // Camera Lifecycle
     private boolean isStopped = false;
     private boolean isBlocked = false;
@@ -72,31 +75,45 @@ public class FaceRecognitionOpenCVPresenter implements
     private CascadeClassifier detectorFace;
     private boolean isMachineLearningInitialised = false;
 
-    public FaceRecognitionOpenCVPresenter(Handler handler, View view) {
+    public FDOpenCVPresenter(MainThread handler, View view) {
         mainHandler = handler;
         this.view = view;
+        interactorExecutor = new InteractorPoolExecutor();
+    }
+
+    public void detectEyes(Rect faceOpenCV) {
+        if (!isStopped && eyesDetectionInteractor != null) {
+            eyesDetectionInteractor.execute(matrixGray, matrixRgba, faceOpenCV, this);
+        }
+    }
+
+    public interface View {
+        void drawFace(Rect faceOpenCV, Mat face);
+
+        void startEyesDetection(Rect faceOpenCV);
     }
 
     private void setMachineLearningMechanism() {
         if (!isMachineLearningInitialised) {
-            faceRecognitionInteractor = new FaceRecognitionInteractorImpl(detectorFace, mainHandler);
-            eyesRecognitionInteractor = new EyesRecognitionInteractorImpl(detectorEye, mainHandler);
+            fdInteractor = new FDInteractorImpl(detectorFace, mainHandler, interactorExecutor);
+            eyesDetectionInteractor = new EyesDetectionInteractorImpl(detectorEye, mainHandler, interactorExecutor);
             isMachineLearningInitialised = true;
         }
     }
 
     @Override
-    public void onFaceRecognised(org.opencv.core.Rect faceOpenCV, RecognisedFace face) {
-        if (!isStopped) {
+    public void onFaceDetected(Rect faceOpenCV, Face face) {
+        if (!isStopped && view != null) {
             view.drawFace(faceOpenCV, matrixRgba);
-            eyesRecognitionInteractor.execute(matrixGray, matrixRgba, faceOpenCV, this);
+            if (matrixGray.height() > 0) {
+                view.startEyesDetection(faceOpenCV);
+            }
         }
     }
 
     @Override
-    public void onEyesRecognised() {
+    public void onEyesDetected() {
         if (!isStopped) {
-            Log.i(TAG, "Eyes recognised and rendered");
             isBlocked = false;
         }
     }
@@ -106,11 +123,13 @@ public class FaceRecognitionOpenCVPresenter implements
         matrixGray = new Mat();
         matrixRgba = new Mat();
         isStopped = false;
+        eyesDetectionInteractor.setRunningStatus(true);
     }
 
     @Override
     public void onCameraViewStopped() {
         isStopped = true;
+        eyesDetectionInteractor.setRunningStatus(false);
         matrixRgba.release();
         matrixGray.release();
     }
@@ -121,7 +140,7 @@ public class FaceRecognitionOpenCVPresenter implements
         Mat gray = inputFrame.gray();
         setMatrices(rgba, gray);
         if (isMachineLearningInitialised && !isStopped) {
-            faceRecognitionInteractor.execute(matrixGray, this);
+            fdInteractor.execute(matrixGray, this);
         }
         return matrixRgba;
     }
@@ -196,9 +215,8 @@ public class FaceRecognitionOpenCVPresenter implements
     }
 
     public void cleanUp() {
-        mainHandler = null;
-        faceRecognitionInteractor = null;
-        eyesRecognitionInteractor = null;
+        fdInteractor = null;
+        eyesDetectionInteractor = null;
         matrixRgba = null;
         matrixGray = null;
         detectorEye = null;

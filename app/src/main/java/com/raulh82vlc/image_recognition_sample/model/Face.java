@@ -26,7 +26,7 @@ import com.raulh82vlc.image_recognition_sample.model.math.Square;
  * @author Raul Hernandez Lopez.
  */
 
-public class RecognisedFace {
+public class Face {
     private Square faceShape;
     private Square eyeLeft;
     private Square eyeRight;
@@ -38,11 +38,11 @@ public class RecognisedFace {
         return new Square(new Point(xStart, yStart), width, height);
     }
 
-    public RecognisedFace() {
+    public Face() {
 
     }
 
-    public RecognisedFace(double xStart, double yStart, int width, int height) {
+    public Face(double xStart, double yStart, int width, int height) {
         this.faceShape = getSquare(xStart, yStart, width, height);
     }
 

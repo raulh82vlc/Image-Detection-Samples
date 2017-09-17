@@ -37,9 +37,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.Face;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -48,7 +46,8 @@ import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 
-import com.raulh82vlc.image_recognition_sample.model.RecognisedFace;
+import com.raulh82vlc.image_recognition_sample.domain.MainThread;
+import com.raulh82vlc.image_recognition_sample.model.Face;
 import com.raulh82vlc.image_recognition_sample.camera2.ui.FDCamera2Activity;
 import com.raulh82vlc.image_recognition_sample.ui.widgets.AutofitTextureView;
 
@@ -61,11 +60,11 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Face Recognition Camera 2 Presenter decouples Camera 2 logic from activity
+ * Face Detection Camera 2 Presenter decouples Camera 2 logic from activity
  * @author Raul Hernandez Lopez.
  */
 
-public class FaceRecognitionCamera2Presenter {
+public class FDCamera2Presenter {
     /**
      * Max preview width that is guaranteed by Camera2 API
      */
@@ -77,7 +76,7 @@ public class FaceRecognitionCamera2Presenter {
     private static final int MAX_PREVIEW_HEIGHT = 1080;
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-    private static final String TAG = FaceRecognitionCamera2Presenter.class.getSimpleName();
+    private static final String TAG = FDCamera2Presenter.class.getSimpleName();
 
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -90,27 +89,34 @@ public class FaceRecognitionCamera2Presenter {
     private CaptureRequest.Builder captureRequestBuilder;
     private CameraDevice cameraDevice;
 
-    private Handler mainHandler;
-    private HandlerThread mBackgroundThread;
+    private MainThread mainThread;
+    private HandlerThread backgroundThread;
     /**
      * A {@link Semaphore} to prevent the app from exiting before closing the camera.
      */
-    private Semaphore mCameraOpenCloseLock = new Semaphore(1);
+    private Semaphore cameraOpenCloseLock = new Semaphore(1);
     private Size mPreviewSize;
 
     private Size imageDimension;
     private FDCamera2Activity camera2View;
-    private CameraFaceCallback faceRecognisedCallback;
+    private View view;
 
-    /**
-     * Camera Face Callback used when Camera 2 API returns a face and this was transformed to {@link RecognisedFace}
-     */
-    public interface CameraFaceCallback {
-        void onFaceRecognised(RecognisedFace face);
+    public FDCamera2Presenter(MainThread mainThread) {
+        this.mainThread = mainThread;
     }
 
-    public FaceRecognitionCamera2Presenter(Handler handler) {
-        mainHandler = handler;
+    /**
+     * Camera Face View (Callback) used when Camera 2 API returns a {@link Face}
+     */
+    public interface View {
+
+        void onFaceDetected(Face face);
+
+        void drawAR(Face face);
+    }
+
+    public void drawAR(Face face) {
+        view.drawAR(face);
     }
 
     public AutofitTextureView.SurfaceTextureListener getListener() {
@@ -144,20 +150,20 @@ public class FaceRecognitionCamera2Presenter {
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(CameraDevice camera) {
-            mCameraOpenCloseLock.release();
+            cameraOpenCloseLock.release();
             Log.i(TAG, "onOpened");
             cameraDevice = camera;
             createCameraPreview();
         }
         @Override
         public void onDisconnected(CameraDevice camera) {
-            mCameraOpenCloseLock.release();
+            cameraOpenCloseLock.release();
             camera.close();
             cameraDevice = null;
         }
         @Override
         public void onError(CameraDevice camera, int error) {
-            mCameraOpenCloseLock.release();
+            cameraOpenCloseLock.release();
             camera.close();
             cameraDevice = null;
         }
@@ -166,14 +172,14 @@ public class FaceRecognitionCamera2Presenter {
     private CameraCaptureSession.CaptureCallback mCaptureCallback = new CameraCaptureSession.CaptureCallback() {
         private void process(CaptureResult result) {
             Integer mode = result.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
-            Face[] faces = result.get(CaptureResult.STATISTICS_FACES);
+            android.hardware.camera2.params.Face[] faces = result.get(CaptureResult.STATISTICS_FACES);
 
             if (faces != null && mode != null) {
                 Log.i("tag", "faces : " + faces.length + " , mode : " + mode);
-                for (Face face : faces) {
+                for (android.hardware.camera2.params.Face face : faces) {
                     Rect faceBounds = face.getBounds();
                     // Once processed, the result is sent back to the View
-                    faceRecognisedCallback.onFaceRecognised(mapCameraFaceToCanvas(faceBounds));
+                    view.onFaceDetected(mapCameraFaceToCanvas(faceBounds));
                 }
             }
         }
@@ -191,9 +197,9 @@ public class FaceRecognitionCamera2Presenter {
         }
     };
 
-    public void setView(FDCamera2Activity camera2View, CameraFaceCallback callback) {
+    public void setView(FDCamera2Activity camera2View, View callback) {
         this.camera2View = camera2View;
-        this.faceRecognisedCallback = callback;
+        this.view = callback;
     }
 
     public void openCamera(int width, int height) {
@@ -210,7 +216,7 @@ public class FaceRecognitionCamera2Presenter {
             CameraManager manager = (CameraManager) camera2View.getSystemService(Context.CAMERA_SERVICE);
 
             try {
-                if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
+                if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                     throw new RuntimeException("Time out waiting to lock camera opening.");
                 }
                 String[] cameras = manager.getCameraIdList();
@@ -218,7 +224,7 @@ public class FaceRecognitionCamera2Presenter {
                 CameraCharacteristics characteristics
                         = manager.getCameraCharacteristics(cameraId);
                 int[] faceDetectModes = characteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
-                manager.openCamera(cameraId, stateCallback, mainHandler);
+                manager.openCamera(cameraId, stateCallback, mainThread.get());
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -310,7 +316,8 @@ public class FaceRecognitionCamera2Presenter {
                 CameraMetadata.STATISTICS_FACE_DETECT_MODE_FULL);
 
         try {
-            cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), mCaptureCallback, mainHandler);
+            cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),
+                    mCaptureCallback, mainThread.get());
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -318,7 +325,7 @@ public class FaceRecognitionCamera2Presenter {
 
     public void closeCamera() {
         try {
-            mCameraOpenCloseLock.acquire();
+            cameraOpenCloseLock.acquire();
             if (null != cameraCaptureSessions) {
                 cameraCaptureSessions.close();
                 cameraCaptureSessions = null;
@@ -330,21 +337,21 @@ public class FaceRecognitionCamera2Presenter {
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
         } finally {
-            mCameraOpenCloseLock.release();
+            cameraOpenCloseLock.release();
         }
     }
 
     public void startBackgroundThread() {
-        mBackgroundThread = new HandlerThread("Camera Background");
-        mBackgroundThread.start();
+        backgroundThread = new HandlerThread("Camera Background");
+        backgroundThread.start();
     }
 
     public void stopBackgroundThread() {
-        mBackgroundThread.quitSafely();
+        backgroundThread.quitSafely();
         try {
-            mBackgroundThread.join();
-            mBackgroundThread = null;
-            mainHandler = null;
+            backgroundThread.join();
+            backgroundThread = null;
+            mainThread = null;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -355,20 +362,20 @@ public class FaceRecognitionCamera2Presenter {
      * then passes the RecognisedFace object back
      * @param faceBounds
      */
-    private RecognisedFace mapCameraFaceToCanvas(Rect faceBounds) {
+    private Face mapCameraFaceToCanvas(Rect faceBounds) {
         if (isViewAvailable()) {
             int w = faceBounds.width();
-            return new RecognisedFace(
+            return new Face(
                     faceBounds.centerX() - (w / 2),
                     (double) faceBounds.centerY(),
                     w,
                     faceBounds.height());
         }
-        return new RecognisedFace();
+        return new Face();
     }
 
     public void cleanUp() {
-        mainHandler = null;
+        mainThread = null;
         if (null != cameraCaptureSessions) {
             cameraCaptureSessions.close();
             cameraCaptureSessions = null;

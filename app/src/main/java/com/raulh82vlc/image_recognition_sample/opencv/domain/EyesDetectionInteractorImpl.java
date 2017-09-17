@@ -16,8 +16,8 @@
 
 package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
-import android.os.Handler;
-
+import com.raulh82vlc.image_recognition_sample.domain.InteractorExecutor;
+import com.raulh82vlc.image_recognition_sample.domain.MainThread;
 import com.raulh82vlc.image_recognition_sample.opencv.render.FaceDrawerOpenCV;
 
 import org.opencv.core.Core;
@@ -31,14 +31,11 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 /**
- * Eyes Recognition Interactor implementation of the {@link EyesRecognitionInteractor} contract
+ * Eyes Detection Interactor implementation of the {@link EyesDetectionInteractor} contract
  * @author Raul Hernandez Lopez.
  */
-public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitionInteractor {
+public class EyesDetectionInteractorImpl implements Interactor, EyesDetectionInteractor {
     public static final int LEARN_FRAMES_LIMIT = 250;
     public static final int LEARN_FRAMES_MATCH_EYE = 100;
     private int learnFrames = 0;
@@ -48,14 +45,15 @@ public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitio
     private Mat templateLeft;
     private Rect face;
     private Mat matrixGray, matrixRGBA;
-    private final Executor executorImageRecognition;
-    private final Handler mainThread;
+    private final InteractorExecutor executor;
+    private final MainThread mainThread;
     private EyesCallback eyesCallback;
+    private boolean isRunning = false;
 
-    public EyesRecognitionInteractorImpl(CascadeClassifier detectorEye,
-                                         Handler mainThread) {
+    public EyesDetectionInteractorImpl(CascadeClassifier detectorEye,
+                                       MainThread mainThread, InteractorExecutor executor) {
         this.detectorEye = detectorEye;
-        executorImageRecognition =  Executors.newSingleThreadExecutor();
+        this.executor =  executor;
         this.mainThread = mainThread;
     }
 
@@ -70,32 +68,39 @@ public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitio
         this.matrixRGBA = matrixRGBA;
         this.face = face;
         this.eyesCallback = callback;
-        executorImageRecognition.execute(this);
+        isRunning = true;
+        executor.execute(this);
+    }
+
+    @Override
+    public void setRunningStatus(boolean isRunning) {
+        this.isRunning = isRunning;
     }
 
     private void extractEyes() {
-        // computing eye areas as well as splitting it
-        Rect rightEyeArea = new Rect(face.x + face.width / 16,
-                (int) (face.y + (face.height / 4.5)),
-                (face.width - 2 * face.width / 16) / 2, (int) (face.height / 3.0));
-        Rect leftEyeArea = new Rect(face.x + face.width / 16
-                + (face.width - 2 * face.width / 16) / 2,
-                (int) (face.y + (face.height / 4.5)),
-                (face.width - 2 * face.width / 16) / 2, (int) (face.height / 3.0));
-        FaceDrawerOpenCV.drawEyesRectangles(rightEyeArea, leftEyeArea, matrixRGBA);
+        if (isRunning) {
+            // computing eye areas as well as splitting it
+            Rect rightEyeArea = new Rect(face.x + face.width / 16,
+                    (int) (face.y + (face.height / 4.5)),
+                    (face.width - 2 * face.width / 16) / 2, (int) (face.height / 3.0));
+            Rect leftEyeArea = new Rect(face.x + face.width / 16
+                    + (face.width - 2 * face.width / 16) / 2,
+                    (int) (face.y + (face.height / 4.5)),
+                    (face.width - 2 * face.width / 16) / 2, (int) (face.height / 3.0));
+            FaceDrawerOpenCV.drawEyesRectangles(rightEyeArea, leftEyeArea, matrixRGBA);
 
-
-        if (learnFrames < LEARN_FRAMES_LIMIT) {
-            templateRight = buildTemplate(rightEyeArea, 24);
-            templateLeft = buildTemplate(leftEyeArea, 24);
-            learnFrames++;
-        } else {
-            // Learning finished, use the new templates for template matching
-            matchEye(rightEyeArea, templateRight);
-            matchEye(leftEyeArea, templateLeft);
-            chronometerOfFrames();
+            if (learnFrames < LEARN_FRAMES_LIMIT) {
+                templateRight = buildTemplate(rightEyeArea, 24, matrixGray, matrixRGBA, detectorEye);
+                templateLeft = buildTemplate(leftEyeArea, 24, matrixGray, matrixRGBA, detectorEye);
+                learnFrames++;
+            } else {
+                // Learning finished, use the new templates for template matching
+                matchEye(rightEyeArea, templateRight);
+                matchEye(leftEyeArea, templateLeft);
+                chronometerOfFrames();
+            }
+            notifyEyesFound();
         }
-        notifyEyesFound();
     }
 
     private synchronized void chronometerOfFrames() {
@@ -138,9 +143,11 @@ public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitio
         }
     }
 
-    private Mat buildTemplate(Rect area, int size) {
+    private static Mat buildTemplate(Rect area, int size, Mat grayMat,
+                                     Mat rgbaMat,
+                                     CascadeClassifier detectorEye) {
         Mat template = new Mat();
-        Mat mROI = matrixGray.submat(area);
+        Mat mROI = grayMat.submat(area);
         MatOfRect eyes = new MatOfRect();
         Point iris = new Point();
         Rect eyeTemplate;
@@ -157,8 +164,8 @@ public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitio
             Rect eyeRectangle = new Rect((int) e.tl().x,
                     (int) (e.tl().y + e.height * 0.4), e.width,
                     (int) (e.height * 0.6));
-            mROI = matrixGray.submat(eyeRectangle);
-            Mat vyrez = matrixRGBA.submat(eyeRectangle);
+            mROI = grayMat.submat(eyeRectangle);
+            Mat vyrez = rgbaMat.submat(eyeRectangle);
 
 
             Core.MinMaxLocResult mmG = Core.minMaxLoc(mROI);
@@ -168,8 +175,8 @@ public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitio
             iris.y = mmG.minLoc.y + eyeRectangle.y;
             eyeTemplate = new Rect((int) iris.x - size / 2, (int) iris.y
                     - size / 2, size, size);
-            FaceDrawerOpenCV.drawIrisRectangle(eyeTemplate, matrixRGBA);
-            template = (matrixGray.submat(eyeTemplate)).clone();
+            FaceDrawerOpenCV.drawIrisRectangle(eyeTemplate, rgbaMat);
+            template = (grayMat.submat(eyeTemplate)).clone();
             return template;
         }
         return template;
@@ -179,7 +186,7 @@ public class EyesRecognitionInteractorImpl implements Interactor, EyesRecognitio
         mainThread.post(new Runnable() {
             @Override
             public void run() {
-                eyesCallback.onEyesRecognised();
+                eyesCallback.onEyesDetected();
             }
         });
     }
