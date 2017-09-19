@@ -98,6 +98,7 @@ public class FaceDrawer extends View {
             setTransformation(w, h, wBit, hBit);
             canvas.drawBitmap(bmp,
                     transformation, paint);
+            bmp.recycle();
         }
     }
 
