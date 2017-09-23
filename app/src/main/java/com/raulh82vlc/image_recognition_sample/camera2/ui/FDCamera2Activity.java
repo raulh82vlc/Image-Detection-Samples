@@ -18,9 +18,11 @@ package com.raulh82vlc.image_recognition_sample.camera2.ui;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.Display;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -74,7 +76,18 @@ public class FDCamera2Activity extends Activity implements FDCamera2Presenter.Vi
         presenter.setView(this, this);
         textureView.setSurfaceTextureListener(presenter.getListener());
         faceDrawer = (FaceDrawer) findViewById(R.id.face_drawer);
-        faceDrawer.settings();
+        Point size = getSize();
+        int width = size.x;
+        int height = size.y;
+        faceDrawer.setScreenSize(width, height);
+    }
+
+    @NonNull
+    private Point getSize() {
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        return size;
     }
 
     @Override

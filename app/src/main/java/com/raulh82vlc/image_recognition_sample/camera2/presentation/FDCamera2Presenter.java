@@ -179,7 +179,8 @@ public class FDCamera2Presenter {
                 for (android.hardware.camera2.params.Face face : faces) {
                     Rect faceBounds = face.getBounds();
                     // Once processed, the result is sent back to the View
-                    view.onFaceDetected(mapCameraFaceToCanvas(faceBounds));
+                    view.onFaceDetected(mapCameraFaceToCanvas(faceBounds, face.getLeftEyePosition(),
+                            face.getRightEyePosition()));
                 }
             }
         }
@@ -361,15 +362,22 @@ public class FDCamera2Presenter {
      * Maps {@link Rect} face bounds from Camera 2 API towards the model used throughout the samples
      * then passes the RecognisedFace object back
      * @param faceBounds
+     * @param leftEyePosition
+     * @param rightEyePosition
      */
-    private Face mapCameraFaceToCanvas(Rect faceBounds) {
+    private Face mapCameraFaceToCanvas(Rect faceBounds, Point leftEyePosition, Point rightEyePosition) {
         if (isViewAvailable()) {
             int w = faceBounds.width();
-            return new Face(
-                    faceBounds.centerX() - (w / 2),
-                    (double) faceBounds.centerY(),
+            int h = faceBounds.height();
+            Face face = new Face(
+                    faceBounds.centerX() - w,
+                    faceBounds.centerY(),
                     w,
-                    faceBounds.height());
+                    h);
+            if (leftEyePosition != null) {
+                face.setIrisLeft(leftEyePosition.x, leftEyePosition.y);
+            }
+            return face;
         }
         return new Face();
     }

@@ -27,18 +27,18 @@ import com.raulh82vlc.image_recognition_sample.camera2.render.model.MeasuresUI;
 final class TransformationsHelper {
     private TransformationsHelper() {}
 
-    static MeasuresUI calcMeasures(int w, int h, int wBit, int hBit) {
-        float scale;
-        float dx, dy;
-        if (wBit * h > w * hBit) {
-            scale = ((float) h / (float) hBit) * 2;
-            dx = (w - wBit * scale) * 0.5f;
-            dy = 0f;
+    static MeasuresUI calcMeasures(int w, int h, int viewWidth, int viewHeight, int x, int y, int widthGraphic, int heightGraphic) {
+        float scaleGraphic;
+        if (viewWidth * h > w * viewHeight) {
+            scaleGraphic = ((float) h / (float) viewHeight) * 2;
         } else {
-            scale = ((float) w / (float) wBit) * 2;
-            dy = (h - hBit * scale) * 0.5f;
-            dx = 0f;
+            scaleGraphic = ((float) w / (float) viewWidth) * 2;
         }
-        return new MeasuresUI(scale, dx, dy);
+
+        int dxGraphic = (int) ((widthGraphic - (widthGraphic * scaleGraphic)));
+        int dyGraphic = (int) ((heightGraphic - (heightGraphic * scaleGraphic)));
+        int posX = (int) (x * scaleGraphic) - (dxGraphic / 2) + dxGraphic;
+        int posY = (int) (y * scaleGraphic) - (dyGraphic / 2) + dyGraphic;
+        return new MeasuresUI(scaleGraphic, posX, posY);
     }
 }

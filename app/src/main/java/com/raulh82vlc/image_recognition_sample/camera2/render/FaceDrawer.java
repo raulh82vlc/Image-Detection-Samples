@@ -17,13 +17,14 @@
 package com.raulh82vlc.image_recognition_sample.camera2.render;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -44,13 +45,15 @@ import static android.graphics.BitmapFactory.decodeResource;
  */
 
 public class FaceDrawer extends View {
-    public static final String KEY_BITMAP = "Goku_Sayan";
-    private HashMap<String, Bitmap> mStore = new HashMap <>();
-    private Paint paint;
+    private static final String KEY_BITMAP_HEAD = "Goku_Sayan";
+    private HashMap<String, Drawable> mStore = new HashMap <>();
     private Face face;
     private Paint paintMarker;
     private Rect rect;
     private Matrix transformation;
+    private int screenWidth, screenHeight;
+    private int widthMeasure, heightMeasure;
+    private int viewWidth, viewHeight;
 
     public FaceDrawer(Context context) {
         super(context);
@@ -63,16 +66,17 @@ public class FaceDrawer extends View {
     }
 
     private void setAttributes() {
-        paint = new Paint();
         paintMarker = new Paint();
         paintMarker.setColor(Color.RED);
         paintMarker.setStrokeWidth(10);
         paintMarker.setStyle(Paint.Style.STROKE);
         // to create a discontinuous marker
         paintMarker.setPathEffect(new DashPathEffect(new float[] {10,20}, 0));
-        paint.setFilterBitmap(true);
-        mStore.put(KEY_BITMAP, decodeResource(getResources(),
+
+        Drawable drawable = new BitmapDrawable(getResources(), decodeResource(getResources(),
                 R.drawable.goku_supersayan));
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        mStore.put(KEY_BITMAP_HEAD, drawable);
         rect = new Rect();
         transformation = new Matrix();
     }
@@ -84,20 +88,23 @@ public class FaceDrawer extends View {
             Square faceShape = face.getFaceShape();
             int w =  faceShape.getWidth();
             int h =  faceShape.getHeight();
+
             drawFaceMarker(canvas, faceShape, w, h);
-            drawBitmapHairAR(canvas, w, h);
+            // Bitmap AR Super Sayan
+            drawBitmapAR(canvas, mStore.get(KEY_BITMAP_HEAD), w, h,
+                    (int) faceShape.getStart().getxAxis() - (w / 2),
+                    (int) faceShape.getStart().getyAxis() - (int)(h * 1.5));
         }
     }
 
-    private void drawBitmapHairAR(Canvas canvas, int w, int h) {
-        // Bitmap AR Super Sayan
-        Bitmap bmp = mStore.get(KEY_BITMAP);
-        if (bmp != null) {
-            int wBit = bmp.getWidth();
-            int hBit = bmp.getHeight();
-            setTransformation(w, h, wBit, hBit);
-            canvas.drawBitmap(bmp,
-                    transformation, paint);
+    private void drawBitmapAR(Canvas canvas, Drawable drawable, int w, int h, int x, int y) {
+        if (drawable != null) {
+
+            int widthGraphic = drawable.getIntrinsicWidth();
+            int heightGraphic = drawable.getIntrinsicHeight();
+            setTransformation(w, h, x, y, widthGraphic, heightGraphic);
+            canvas.setMatrix(transformation);
+            drawable.draw(canvas);
         }
     }
 
@@ -107,10 +114,13 @@ public class FaceDrawer extends View {
         canvas.drawRect(rect, paintMarker);
     }
 
-    private void setTransformation(int w, int h, int wBit, int hBit) {
-        MeasuresUI measures = TransformationsHelper.calcMeasures(w, h, wBit, hBit);
+    private void setTransformation(int w, int h, int x, int y, int widthGraphic, int heightGraphic) {
+        MeasuresUI measures = TransformationsHelper.calcMeasures(w, h, viewWidth, viewHeight, x, y,
+                widthGraphic,
+                heightGraphic);
         transformation.setScale(measures.getScale(), measures.getScale());
         transformation.postTranslate(measures.getDx(), measures.getDy());
+        transformation.postConcat(transformation);
     }
 
     private void setMarker(Square faceShape, int w, int h) {
@@ -129,7 +139,49 @@ public class FaceDrawer extends View {
         invalidate();
     }
 
-    public void settings() {
-        setAttributes();
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        calcViewSize();
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        this.widthMeasure = widthMeasureSpec;
+        this.heightMeasure = heightMeasureSpec;
+        calcViewSize();
+    }
+
+    /**
+     * Calculation of view size
+     */
+    private void calcViewSize() {
+        int width;
+        int height;
+        width = Math.max(screenWidth, getSuggestedMinimumWidth());
+        height = Math.max(screenHeight, getSuggestedMinimumHeight());
+        if (MeasureSpec.getMode(heightMeasure)
+                == MeasureSpec.AT_MOST) {
+            if (screenWidth == width) {
+                height = screenHeight;
+            } else {
+                height = width * screenHeight / screenWidth;
+            }
+            viewWidth = resolveSize(width, widthMeasure);
+            if (screenWidth != 0) {
+                viewHeight = viewWidth * height / screenWidth;
+            }
+            viewHeight = resolveSize(viewHeight, heightMeasure);
+        } else {
+            viewWidth = resolveSize(width, widthMeasure);
+            viewHeight = resolveSize(height, heightMeasure);
+        }
+
+        setMeasuredDimension(viewWidth, viewHeight);
+    }
+
+    public void setScreenSize(int width, int height) {
+        screenWidth = width;
+        screenHeight = height;
+        calcViewSize();
     }
 }

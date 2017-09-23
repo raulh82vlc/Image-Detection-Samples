@@ -23,6 +23,7 @@ import android.view.SurfaceView;
 import com.raulh82vlc.ar_imagerecognition_sample.R;
 import com.raulh82vlc.image_recognition_sample.domain.InteractorExecutor;
 import com.raulh82vlc.image_recognition_sample.domain.InteractorPoolExecutor;
+import com.raulh82vlc.image_recognition_sample.domain.InteractorSingleThreadExecutor;
 import com.raulh82vlc.image_recognition_sample.domain.MainThread;
 import com.raulh82vlc.image_recognition_sample.model.Face;
 import com.raulh82vlc.image_recognition_sample.opencv.domain.EyesDetectionInteractor;
@@ -53,6 +54,8 @@ public class FDOpenCVPresenter implements
     private static final String TAG = FDOpenCVPresenter.class.getSimpleName();
 
     private static final int CAMERA_ID_FRONT = 1;
+    public static final int MAX_WIDTH = 640;
+    public static final int MAX_HEIGHT = 480;
 
     // Presentation
     private View view;
@@ -78,7 +81,7 @@ public class FDOpenCVPresenter implements
     public FDOpenCVPresenter(MainThread handler, View view) {
         mainHandler = handler;
         this.view = view;
-        interactorExecutor = new InteractorPoolExecutor();
+        interactorExecutor = new InteractorSingleThreadExecutor();
     }
 
     public void detectEyes(Rect faceOpenCV) {
@@ -105,9 +108,7 @@ public class FDOpenCVPresenter implements
     public void onFaceDetected(Rect faceOpenCV, Face face) {
         if (!isStopped && view != null) {
             view.drawFace(faceOpenCV, matrixRgba);
-            if (matrixGray.height() > 0) {
-                view.startEyesDetection(faceOpenCV);
-            }
+            view.startEyesDetection(faceOpenCV);
         }
     }
 
@@ -210,7 +211,7 @@ public class FDOpenCVPresenter implements
 
     public void setCamera(CameraBridgeViewBase openCvCameraView) {
         openCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        openCvCameraView.setMaxFrameSize(640, 480);
+        openCvCameraView.setMaxFrameSize(MAX_WIDTH, MAX_HEIGHT);
         openCvCameraView.setCvCameraViewListener(this);
     }
 
