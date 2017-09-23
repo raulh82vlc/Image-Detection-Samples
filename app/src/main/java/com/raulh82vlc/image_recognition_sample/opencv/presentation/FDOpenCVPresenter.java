@@ -23,6 +23,7 @@ import android.view.SurfaceView;
 import com.raulh82vlc.ar_imagerecognition_sample.R;
 import com.raulh82vlc.image_recognition_sample.domain.InteractorExecutor;
 import com.raulh82vlc.image_recognition_sample.domain.InteractorPoolExecutor;
+import com.raulh82vlc.image_recognition_sample.domain.InteractorSingleThreadExecutor;
 import com.raulh82vlc.image_recognition_sample.domain.MainThread;
 import com.raulh82vlc.image_recognition_sample.model.Face;
 import com.raulh82vlc.image_recognition_sample.opencv.domain.EyesDetectionInteractor;
@@ -80,7 +81,7 @@ public class FDOpenCVPresenter implements
     public FDOpenCVPresenter(MainThread handler, View view) {
         mainHandler = handler;
         this.view = view;
-        interactorExecutor = new InteractorPoolExecutor();
+        interactorExecutor = new InteractorSingleThreadExecutor();
     }
 
     public void detectEyes(Rect faceOpenCV) {
