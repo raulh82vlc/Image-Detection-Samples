@@ -368,13 +368,15 @@ public class FDCamera2Presenter {
     private Face mapCameraFaceToCanvas(Rect faceBounds, Point leftEyePosition, Point rightEyePosition) {
         if (isViewAvailable()) {
             int w = faceBounds.width();
+            int h = faceBounds.height();
             Face face = new Face(
-                    faceBounds.centerX() - (w / 2),
-                    (double) faceBounds.centerY(),
+                    faceBounds.centerX() - w,
+                    faceBounds.centerY(),
                     w,
-                    faceBounds.height());
-            face.setIrisLeft(leftEyePosition.x, leftEyePosition.y);
-            face.setIrisRight(rightEyePosition.x, rightEyePosition.y);
+                    h);
+            if (leftEyePosition != null) {
+                face.setIrisLeft(leftEyePosition.x, leftEyePosition.y);
+            }
             return face;
         }
         return new Face();
