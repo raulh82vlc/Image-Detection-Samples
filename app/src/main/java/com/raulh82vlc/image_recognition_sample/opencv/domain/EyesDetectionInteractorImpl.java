@@ -36,8 +36,8 @@ import org.opencv.objdetect.Objdetect;
  * @author Raul Hernandez Lopez.
  */
 public class EyesDetectionInteractorImpl implements Interactor, EyesDetectionInteractor {
-    public static final int LEARN_FRAMES_LIMIT = 250;
-    public static final int LEARN_FRAMES_MATCH_EYE = 100;
+    private static final int LEARN_FRAMES_LIMIT = 50;
+    private static final int LEARN_FRAMES_MATCH_EYE = 25;
     private int learnFrames = 0;
     private final CascadeClassifier detectorEye;
     private int learnFramesCounter = 0;
@@ -88,22 +88,24 @@ public class EyesDetectionInteractorImpl implements Interactor, EyesDetectionInt
                     (int) (face.y + (face.height / 4.5)),
                     (face.width - 2 * face.width / 16) / 2, (int) (face.height / 3.0));
             FaceDrawerOpenCV.drawEyesRectangles(rightEyeArea, leftEyeArea, matrixRGBA);
-
+            String methodForEyes;
             if (learnFrames < LEARN_FRAMES_LIMIT) {
                 templateRight = buildTemplate(rightEyeArea, 24, matrixGray, matrixRGBA, detectorEye);
                 templateLeft = buildTemplate(leftEyeArea, 24, matrixGray, matrixRGBA, detectorEye);
                 learnFrames++;
+                methodForEyes = "building Template with Detect multiscale, frame: " + learnFrames;
             } else {
                 // Learning finished, use the new templates for template matching
                 matchEye(rightEyeArea, templateRight);
                 matchEye(leftEyeArea, templateLeft);
-                chronometerOfFrames();
+//                resetChronometerOfFrames();
+                methodForEyes = "match eye with Template, frame: " + learnFrames;
             }
-            notifyEyesFound();
+            notifyEyesFound(methodForEyes);
         }
     }
 
-    private synchronized void chronometerOfFrames() {
+    private synchronized void resetChronometerOfFrames() {
         if (learnFramesCounter > LEARN_FRAMES_MATCH_EYE) {
             learnFrames = 0;
             learnFramesCounter = 0;
@@ -157,8 +159,8 @@ public class EyesDetectionInteractorImpl implements Interactor, EyesDetectionInt
                 new Size());
 
         Rect[] eyesArray = eyes.toArray();
-        for (int i = 0; i < eyesArray.length;) {
-            Rect e = eyesArray[i];
+        if (eyesArray.length > 0) {
+            Rect e = eyesArray[0];
             e.x = area.x + e.x;
             e.y = area.y + e.y;
             Rect eyeRectangle = new Rect((int) e.tl().x,
@@ -182,11 +184,11 @@ public class EyesDetectionInteractorImpl implements Interactor, EyesDetectionInt
         return template;
     }
 
-    private void notifyEyesFound() {
+    private void notifyEyesFound(final String methodForEyes) {
         mainThread.post(new Runnable() {
             @Override
             public void run() {
-                eyesCallback.onEyesDetected();
+                eyesCallback.onEyesDetected(methodForEyes);
             }
         });
     }
