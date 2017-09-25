@@ -39,6 +39,6 @@ public interface EyesDetectionInteractor {
      * @author Raul Hernandez Lopez.
      */
     interface EyesCallback {
-        void onEyesDetected();
+        void onEyesDetected(String methodForEyes);
     }
 }

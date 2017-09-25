@@ -22,7 +22,6 @@ import android.view.SurfaceView;
 
 import com.raulh82vlc.ar_imagerecognition_sample.R;
 import com.raulh82vlc.image_recognition_sample.domain.InteractorExecutor;
-import com.raulh82vlc.image_recognition_sample.domain.InteractorPoolExecutor;
 import com.raulh82vlc.image_recognition_sample.domain.InteractorSingleThreadExecutor;
 import com.raulh82vlc.image_recognition_sample.domain.MainThread;
 import com.raulh82vlc.image_recognition_sample.model.Face;
@@ -113,9 +112,10 @@ public class FDOpenCVPresenter implements
     }
 
     @Override
-    public void onEyesDetected() {
+    public void onEyesDetected(String methodForEyes) {
         if (!isStopped) {
             isBlocked = false;
+            Log.d(TAG, "Eyes detected with: " + methodForEyes);
         }
     }
 

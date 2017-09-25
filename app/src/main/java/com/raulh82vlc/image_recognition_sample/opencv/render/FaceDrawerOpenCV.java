@@ -47,21 +47,21 @@ public final class FaceDrawerOpenCV {
     }
 
     public static void drawEyesRectangles(Rect rightEyeArea, Rect leftEyeArea, Mat matrixRgba) {
-        drawIrisRectangle(leftEyeArea, matrixRgba);
-        drawIrisRectangle(rightEyeArea, matrixRgba);
+        drawEyeRectangle(leftEyeArea, matrixRgba);
+        drawEyeRectangle(rightEyeArea, matrixRgba);
     }
 
-    public static void drawIrisRectangle(Rect eyeTemplate, Mat matrixRgba) {
-        Imgproc.rectangle(matrixRgba, eyeTemplate.tl(), eyeTemplate.br(),
+    public static void drawEyeRectangle(Rect eyeArea, Mat matrixRgba) {
+        Imgproc.rectangle(matrixRgba, eyeArea.tl(), eyeArea.br(),
                 new Scalar(255, 0, 0, 255), 2);
     }
 
-    public static void drawIrisCircle(Mat vyrez, Core.MinMaxLocResult mmG) {
-        Imgproc.circle(vyrez, mmG.minLoc, 2, new Scalar(255, 255, 255, 255), 2);
+    public static void drawIrisCircle(Mat matrixRgba, Core.MinMaxLocResult minMaxLocResult) {
+        Imgproc.circle(matrixRgba, minMaxLocResult.minLoc, 2, new Scalar(255, 255, 255, 255), 2);
     }
 
-    public static void drawMatchedEye(Point matchLoc_tx, Point matchLoc_ty, Mat matrixRgba) {
-        Imgproc.rectangle(matrixRgba, matchLoc_tx, matchLoc_ty, new Scalar(255, 255, 0,
+    public static void drawMatchedEye(Point matchLocTx, Point matchLocTy, Mat matrixRgba) {
+        Imgproc.rectangle(matrixRgba, matchLocTx, matchLocTy, new Scalar(255, 255, 0,
                 255));
     }
 }

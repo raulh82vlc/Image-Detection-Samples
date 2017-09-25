@@ -36,15 +36,16 @@ import org.opencv.objdetect.CascadeClassifier;
 
 public class FDInteractorImpl implements Interactor, FDInteractor {
 
-    private static final float RELATIVE_FACE_SIZE = 0.2f;
     private static final String TAG = FDInteractor.class.getSimpleName();
-
-    private final CascadeClassifier detectorFace;
-    private final MainThread mainThread;
-
-    private final InteractorExecutor executorImageRecognition;
-    private Mat matrixGray;
+    private static final float RELATIVE_FACE_SIZE = 0.2f;
     private int absoluteFaceSize = 0;
+    // Cascade classifier
+    private final CascadeClassifier detectorFace;
+    // Image Matrices
+    private Mat matrixGray;
+    // Interactor mechanism
+    private final InteractorExecutor executorImageRecognition;
+    private final MainThread mainThread;
     private FaceCallback faceCallback;
 
     public FDInteractorImpl(CascadeClassifier detectorFace,
