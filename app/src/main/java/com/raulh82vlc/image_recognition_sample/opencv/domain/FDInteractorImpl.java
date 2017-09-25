@@ -16,6 +16,7 @@
 
 package com.raulh82vlc.image_recognition_sample.opencv.domain;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.raulh82vlc.image_recognition_sample.domain.InteractorExecutor;
@@ -41,7 +42,6 @@ public class FDInteractorImpl implements Interactor, FDInteractor {
     private final CascadeClassifier detectorFace;
     private final MainThread mainThread;
 
-    private MatOfRect faces;
     private final InteractorExecutor executorImageRecognition;
     private Mat matrixGray;
     private int absoluteFaceSize = 0;
@@ -61,40 +61,30 @@ public class FDInteractorImpl implements Interactor, FDInteractor {
         executorImageRecognition.execute(this);
     }
 
-    private void startDetectionAndRecognition() {
+    @NonNull
+    private MatOfRect startDetection() {
         if (absoluteFaceSize == 0) {
             int height = matrixGray.rows();
             if (Math.round(height * RELATIVE_FACE_SIZE) > 0) {
                 absoluteFaceSize = Math.round(height * RELATIVE_FACE_SIZE);
             }
         }
+        MatOfRect faces = new MatOfRect();
         if (detectorFace != null) {
-             if (faces == null) {
-                 faces = new MatOfRect();
-             }
             if (matrixGray.height() > 0) {
                 detectorFace.detectMultiScale(matrixGray, faces, 1.1, 2, 2,
                         new Size(absoluteFaceSize, absoluteFaceSize), new Size());
             }
         }
+        return faces;
     }
 
     @Override
     public void run() {
-        startDetectionAndRecognition();
-        Rect[] facesArray = null;
-        if (faces != null) {
-            synchronized (this) {
-                if (faces != null) {
-                    facesArray = faces.toArray();
-                    Log.i(TAG, "Number of faces: " + facesArray.length);
-                }
-            }
-            if (facesArray != null) {
-                for (final Rect rect : facesArray) {
-                    extractCharacteristics(rect);
-                }
-            }
+        Rect[] facesArray = startDetection().toArray();
+        Log.i(TAG, "Number of faces: " + facesArray.length);
+        for (final Rect rect : facesArray) {
+            extractCharacteristics(rect);
         }
     }
 
