@@ -144,13 +144,13 @@ public class EyesDetectionInteractorImpl implements Interactor, EyesDetectionInt
     private static void matchEye(Rect area, Mat builtTemplate, Mat matrixGray, Mat matrixRGBA) {
         Point matchLoc;
         try {
-            Mat submatGray = matrixGray.submat(area);
-            int cols = submatGray.cols() - builtTemplate.cols() + 1;
-            int rows = submatGray.rows() - builtTemplate.rows() + 1;
             // when there is not builtTemplate we skip it
             if (builtTemplate.cols() == 0 || builtTemplate.rows() == 0) {
                 return;
             }
+            Mat submatGray = matrixGray.submat(area);
+            int cols = submatGray.cols() - builtTemplate.cols() + 1;
+            int rows = submatGray.rows() - builtTemplate.rows() + 1;
             Mat outputTemplateMat = new Mat(cols, rows, CvType.CV_8U);
 
             Imgproc.matchTemplate(submatGray, builtTemplate, outputTemplateMat,
