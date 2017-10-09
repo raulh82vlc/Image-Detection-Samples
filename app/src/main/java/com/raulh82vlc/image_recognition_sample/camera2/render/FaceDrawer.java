@@ -34,19 +34,20 @@ import com.raulh82vlc.image_recognition_sample.model.Face;
 import com.raulh82vlc.image_recognition_sample.model.math.Square;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static android.graphics.BitmapFactory.decodeResource;
 
 /**
  * <p>Face Drawer is responsible of having all UI elements ready for painting
- * as soon as there is a recognised face to paint anything</p>
+ * as soon as there is a detected face to paint anything</p>
  *
  * @author Raul Hernandez Lopez.
  */
 
 public class FaceDrawer extends View {
     private static final String KEY_BITMAP_HEAD = "Goku_Sayan";
-    private HashMap<String, Drawable> mStore = new HashMap <>();
+    private Map<String, Drawable> drawableStore = new HashMap <>();
     private Face face;
     private Paint paintMarker;
     private Rect rect;
@@ -57,15 +58,15 @@ public class FaceDrawer extends View {
 
     public FaceDrawer(Context context) {
         super(context);
-        setAttributes();
+        init();
     }
 
     public FaceDrawer(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setAttributes();
+        init();
     }
 
-    private void setAttributes() {
+    private void init() {
         paintMarker = new Paint();
         paintMarker.setColor(Color.RED);
         paintMarker.setStrokeWidth(10);
@@ -76,7 +77,7 @@ public class FaceDrawer extends View {
         Drawable drawable = new BitmapDrawable(getResources(), decodeResource(getResources(),
                 R.drawable.goku_supersayan));
         drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-        mStore.put(KEY_BITMAP_HEAD, drawable);
+        drawableStore.put(KEY_BITMAP_HEAD, drawable);
         rect = new Rect();
         transformation = new Matrix();
     }
@@ -91,27 +92,29 @@ public class FaceDrawer extends View {
 
             drawFaceMarker(canvas, faceShape, w, h);
             // Bitmap AR Super Sayan
-            drawBitmapAR(canvas, mStore.get(KEY_BITMAP_HEAD), w, h,
+            drawBitmapAR(canvas, drawableStore.get(KEY_BITMAP_HEAD), w, h,
                     (int) faceShape.getStart().getxAxis() - (w / 2),
                     (int) faceShape.getStart().getyAxis() - (int)(h * 1.5));
         }
     }
 
+    /**
+     * Draw the bitmap / drawable on screen
+     * @param canvas canvas to be applied to the drawable
+     * @param drawable drawable with bitmap
+     * @param w width of face
+     * @param h height of face
+     * @param x face x coordinate starting point
+     * @param y face y coordinate starting point point
+     */
     private void drawBitmapAR(Canvas canvas, Drawable drawable, int w, int h, int x, int y) {
         if (drawable != null) {
-
             int widthGraphic = drawable.getIntrinsicWidth();
             int heightGraphic = drawable.getIntrinsicHeight();
             setTransformation(w, h, x, y, widthGraphic, heightGraphic);
             canvas.setMatrix(transformation);
             drawable.draw(canvas);
         }
-    }
-
-    private void drawFaceMarker(Canvas canvas, Square faceShape, int w, int h) {
-        // Face AR mark
-        setMarker(faceShape, w, h);
-        canvas.drawRect(rect, paintMarker);
     }
 
     private void setTransformation(int w, int h, int x, int y, int widthGraphic, int heightGraphic) {
@@ -121,6 +124,12 @@ public class FaceDrawer extends View {
         transformation.setScale(measures.getScale(), measures.getScale());
         transformation.postTranslate(measures.getDx(), measures.getDy());
         transformation.postConcat(transformation);
+    }
+
+    private void drawFaceMarker(Canvas canvas, Square faceShape, int w, int h) {
+        // Face AR mark
+        setMarker(faceShape, w, h);
+        canvas.drawRect(rect, paintMarker);
     }
 
     private void setMarker(Square faceShape, int w, int h) {

@@ -84,7 +84,7 @@ public class FDCamera2Presenter {
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
-    private String cameraId;
+
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
     private CameraDevice cameraDevice;
@@ -95,18 +95,19 @@ public class FDCamera2Presenter {
      * A {@link Semaphore} to prevent the app from exiting before closing the camera.
      */
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
-    private Size mPreviewSize;
+    private Size previewSize;
 
     private Size imageDimension;
-    private FDCamera2Activity camera2View;
-    private View view;
+    private FDCamera2Activity activityView;
+    private View presenterView;
 
     public FDCamera2Presenter(MainThread mainThread) {
         this.mainThread = mainThread;
     }
 
     /**
-     * Camera Face View (Callback) used when Camera 2 API returns a {@link Face}
+     * Camera Face View (Callback) used when Camera 2 API returns a {@link Face} from Presenter
+     * to the UI (activity)
      */
     public interface View {
 
@@ -116,7 +117,7 @@ public class FDCamera2Presenter {
     }
 
     public void drawAR(Face face) {
-        view.drawAR(face);
+        presenterView.drawAR(face);
     }
 
     public AutofitTextureView.SurfaceTextureListener getListener() {
@@ -149,82 +150,85 @@ public class FDCamera2Presenter {
      */
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
-        public void onOpened(CameraDevice camera) {
+        public void onOpened(@NonNull CameraDevice camera) {
             cameraOpenCloseLock.release();
             Log.i(TAG, "onOpened");
             cameraDevice = camera;
             createCameraPreview();
         }
         @Override
-        public void onDisconnected(CameraDevice camera) {
+        public void onDisconnected(@NonNull CameraDevice camera) {
             cameraOpenCloseLock.release();
             camera.close();
             cameraDevice = null;
         }
         @Override
-        public void onError(CameraDevice camera, int error) {
+        public void onError(@NonNull CameraDevice camera, int error) {
             cameraOpenCloseLock.release();
             camera.close();
             cameraDevice = null;
         }
     };
 
-    private CameraCaptureSession.CaptureCallback mCaptureCallback = new CameraCaptureSession.CaptureCallback() {
-        private void process(CaptureResult result) {
-            Integer mode = result.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
-            android.hardware.camera2.params.Face[] faces = result.get(CaptureResult.STATISTICS_FACES);
+    private CameraCaptureSession.CaptureCallback captureCallback = new CameraCaptureSession.CaptureCallback() {
+        private void detectFaces(CaptureResult captureResult) {
+            Integer mode = captureResult.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
 
-            if (faces != null && mode != null) {
-                Log.i("tag", "faces : " + faces.length + " , mode : " + mode);
-                for (android.hardware.camera2.params.Face face : faces) {
-                    Rect faceBounds = face.getBounds();
-                    // Once processed, the result is sent back to the View
-                    view.onFaceDetected(mapCameraFaceToCanvas(faceBounds, face.getLeftEyePosition(),
-                            face.getRightEyePosition()));
+            if (isViewAvailable() && mode != null) {
+                android.hardware.camera2.params.Face[] faces = captureResult.get(CaptureResult.STATISTICS_FACES);
+                if (faces != null) {
+                    Log.i(TAG, "faces : " + faces.length + " , mode : " + mode);
+                    for (android.hardware.camera2.params.Face face : faces) {
+                        Rect faceBounds = face.getBounds();
+                        // Once processed, the result is sent back to the View
+                        presenterView.onFaceDetected(mapCameraFaceToCanvas(faceBounds, face.getLeftEyePosition(),
+                                face.getRightEyePosition()));
+                    }
                 }
             }
         }
 
         @Override
-        public void onCaptureProgressed(CameraCaptureSession session, CaptureRequest request,
-                                        CaptureResult partialResult) {
-            process(partialResult);
+        public void onCaptureProgressed(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request,
+                                        @NonNull CaptureResult captureResult) {
+            detectFaces(captureResult);
         }
 
         @Override
-        public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request,
-                                       TotalCaptureResult result) {
-            process(result);
+        public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request,
+                                       @NonNull TotalCaptureResult captureResult) {
+            detectFaces(captureResult);
         }
     };
 
     public void setView(FDCamera2Activity camera2View, View callback) {
-        this.camera2View = camera2View;
-        this.view = callback;
+        this.activityView = camera2View;
+        this.presenterView = callback;
     }
 
-    public void openCamera(int width, int height) {
+    private void openCamera(int width, int height) {
         if (isViewAvailable()) {
-            if (ActivityCompat.checkSelfPermission(camera2View, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                    && ActivityCompat.checkSelfPermission(camera2View, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(camera2View, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        camera2View.PERMISSIONS_REQUEST_CAMERA);
+            if (ActivityCompat.checkSelfPermission(activityView, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(activityView, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(activityView, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        FDCamera2Activity.PERMISSIONS_REQUEST_CAMERA);
                 return;
             }
             setUpCameraOutputs(width, height);
-            configureTransform(mPreviewSize.getHeight(), mPreviewSize.getWidth());
+            configureTransform(previewSize.getHeight(), previewSize.getWidth());
             // Add permission for camera and let user grant the permission
-            CameraManager manager = (CameraManager) camera2View.getSystemService(Context.CAMERA_SERVICE);
+            CameraManager manager = (CameraManager) activityView.getSystemService(Context.CAMERA_SERVICE);
 
             try {
                 if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                     throw new RuntimeException("Time out waiting to lock camera opening.");
                 }
                 String[] cameras = manager.getCameraIdList();
-                cameraId = cameras[1];
-                CameraCharacteristics characteristics
-                        = manager.getCameraCharacteristics(cameraId);
-                int[] faceDetectModes = characteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
+                String cameraId = cameras[1];
+//                CameraCharacteristics characteristics
+//                        = manager.getCameraCharacteristics(cameraId);
+                // Check detectModes
+//                int[] faceDetectModes = characteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
                 manager.openCamera(cameraId, stateCallback, mainThread.get());
             } catch (CameraAccessException e) {
                 e.printStackTrace();
@@ -242,7 +246,7 @@ public class FDCamera2Presenter {
      */
     private void setUpCameraOutputs(int width, int height) {
         if (isViewAvailable()) {
-            CameraManager manager = (CameraManager) camera2View.getSystemService(Context.CAMERA_SERVICE);
+            CameraManager manager = (CameraManager) activityView.getSystemService(Context.CAMERA_SERVICE);
             try {
                 for (String cameraId : manager.getCameraIdList()) {
                     CameraCharacteristics characteristics
@@ -268,7 +272,7 @@ public class FDCamera2Presenter {
                             new CompareSizesByArea());
 
                     Point displaySize = new Point();
-                    camera2View.getWindowManager().getDefaultDisplay().getSize(displaySize);
+                    activityView.getWindowManager().getDefaultDisplay().getSize(displaySize);
                     int rotatedPreviewWidth = width;
                     int rotatedPreviewHeight = height;
                     int maxPreviewWidth = displaySize.x;
@@ -285,18 +289,18 @@ public class FDCamera2Presenter {
                     // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
                     // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                     // garbage capture data.
-                    mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                    previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                             rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
                             maxPreviewHeight, largest);
 
                     // We fit the aspect ratio of TextureView to the size of preview we picked.
-                    int orientation = camera2View.getResources().getConfiguration().orientation;
+                    int orientation = activityView.getResources().getConfiguration().orientation;
                     if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        camera2View.getTextureView().setAspectRatio(
-                                mPreviewSize.getWidth(), mPreviewSize.getHeight());
+                        activityView.getTextureView().setAspectRatio(
+                                previewSize.getWidth(), previewSize.getHeight());
                     } else {
-                        camera2View.getTextureView().setAspectRatio(
-                                mPreviewSize.getHeight(), mPreviewSize.getWidth());
+                        activityView.getTextureView().setAspectRatio(
+                                previewSize.getHeight(), previewSize.getWidth());
                     }
                     return;
                 }
@@ -309,7 +313,7 @@ public class FDCamera2Presenter {
         }
     }
 
-    protected void updatePreview() {
+    private void updatePreview() {
         if(null == cameraDevice) {
             Log.e(TAG, "updatePreview error, return");
         }
@@ -318,7 +322,7 @@ public class FDCamera2Presenter {
 
         try {
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),
-                    mCaptureCallback, mainThread.get());
+                    captureCallback, mainThread.get());
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -392,18 +396,18 @@ public class FDCamera2Presenter {
             cameraDevice.close();
             cameraDevice = null;
         }
-        if (null != mCaptureCallback) {
-            mCaptureCallback = null;
+        if (null != captureCallback) {
+            captureCallback = null;
         }
     }
 
     public boolean isViewAvailable() {
-        return camera2View != null;
+        return activityView != null && presenterView != null;
     }
 
     public void onResume() {
         if (isViewAvailable()) {
-            AutofitTextureView textureView = camera2View.getTextureView();
+            AutofitTextureView textureView = activityView.getTextureView();
             if (textureView.isAvailable()) {
                 openCamera(textureView.getWidth(), textureView.getHeight());
             } else {
@@ -425,7 +429,7 @@ public class FDCamera2Presenter {
     private void createCameraPreview() {
         if (isViewAvailable()) {
             try {
-                SurfaceTexture texture = camera2View.getTextureView().getSurfaceTexture();
+                SurfaceTexture texture = activityView.getTextureView().getSurfaceTexture();
                 assert texture != null;
 
                 texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
@@ -498,27 +502,27 @@ public class FDCamera2Presenter {
      */
     private void configureTransform(int viewWidth, int viewHeight) {
         if (isViewAvailable()) {
-            if (null == camera2View.getTextureView()) {
+            if (null == activityView.getTextureView()) {
                 return;
             }
-            int rotation = camera2View.getWindowManager().getDefaultDisplay().getRotation();
+            int rotation = activityView.getWindowManager().getDefaultDisplay().getRotation();
             Matrix matrix = new Matrix();
             RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-            RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
+            RectF bufferRect = new RectF(0, 0, previewSize.getHeight(), previewSize.getWidth());
             float centerX = viewRect.centerX();
             float centerY = viewRect.centerY();
             if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
                 bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
                 matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
                 float scale = Math.max(
-                        (float) viewHeight / mPreviewSize.getHeight(),
-                        (float) viewWidth / mPreviewSize.getWidth());
+                        (float) viewHeight / previewSize.getHeight(),
+                        (float) viewWidth / previewSize.getWidth());
                 matrix.postScale(scale, scale, centerX, centerY);
                 matrix.postRotate(90 * (rotation - 2), centerX, centerY);
             } else if (Surface.ROTATION_180 == rotation) {
                 matrix.postRotate(180, centerX, centerY);
             }
-            camera2View.getTextureView().setTransform(matrix);
+            activityView.getTextureView().setTransform(matrix);
         }
     }
 }
