@@ -127,7 +127,9 @@ public class FDCamera2Activity extends Activity implements FDCamera2Presenter.Vi
 
     @Override
     public void onFaceDetected(Face face) {
-        presenter.drawAR(face);
+        if (presenter != null) {
+            presenter.drawAR(face);
+        }
     }
 
     @Override
