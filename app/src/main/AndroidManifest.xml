@@ -16,7 +16,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.raulh82vlc.ar_imagerecognition_sample" >
+    package="com.raulh82vlc.ar_face_detection_sample" >
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-feature android:name="android.hardware.camera2.full" />
@@ -48,7 +48,7 @@
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
 
         <activity
-            android:name="com.raulh82vlc.image_recognition_sample.opencv.ui.FDOpenCVActivity"
+            android:name="com.raulh82vlc.face_detection_sample.opencv.ui.FDOpenCVActivity"
             android:label="@string/OpenCV"
             android:hardwareAccelerated="true"
             android:screenOrientation="landscape"
@@ -57,7 +57,7 @@
         </activity>
 
         <activity
-            android:name="com.raulh82vlc.image_recognition_sample.camera2.ui.FDCamera2Activity"
+            android:name="com.raulh82vlc.face_detection_sample.camera2.ui.FDCamera2Activity"
             android:label="@string/Camera2"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait"
@@ -66,7 +66,7 @@
         </activity>
 
         <activity
-            android:name="com.raulh82vlc.image_recognition_sample.ui.MainActivity"
+            android:name="com.raulh82vlc.face_detection_sample.ui.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:configChanges="keyboardHidden|orientation">

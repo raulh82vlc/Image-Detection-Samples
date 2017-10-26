@@ -4,7 +4,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
     defaultConfig {
-        applicationId "com.raulh82vlc.ar_imagerecognition_sample"
+        applicationId "com.raulh82vlc.ar_face_detection_sample"
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
