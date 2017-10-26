@@ -15,7 +15,7 @@
   -->
 
 <resources>
-    <string name="app_name">AR_ImageRecognition_sample</string>
+    <string name="app_name">AR Face Detection sample</string>
     <string name="action_settings">Settings</string>
     <string name="no_permissions_allowed">No camera permissions allowed, please acknowledge in order to see your camera features</string>
     <string name="OpenCV">OpenCV</string>
