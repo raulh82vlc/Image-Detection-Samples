@@ -3,12 +3,14 @@
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
 
-This sample app supports
-- *Building a Minimum Viable Product (MVP) with Face recognition and AR in Android*
-- & [Quest of a hero presentation slides @ Londroid April 2017](https://speakerdeck.com/raulh82vlc/quest-of-a-hero-at-londroid-april-2017) presentation
-- As well as it has two different possibilities to create face detection mechanisms.
-The first one is *OpenCV* based and the second one is by means of *Camera 2 API*
-This sample supplies few Augmented reality things.
+This sample app is basically made to support the following talks:
+- *Building a Minimum Viable Product (MVP) with Face recognition and AR in Android* at Droidcon London 2017
+- [Quest of a hero presentation slides @ Londroid April 2017](https://speakerdeck.com/raulh82vlc/quest-of-a-hero-at-londroid-april-2017) presentation
+
+### Pre requirements to play the sample apps
+- For OpenCV you will need to install the OpenCV manager prior to execute this OpenCV sample on your device or making an in app native OpenCV installation with the .so file.
+- I would fairly suggest to start Camera 2 sample first to allow camera permissions on your device, since OpenCV is looking for both permissions and OpenCV library, might fail at some point if there is a race condition.
+- Last suggestion, don´t use any emulator for those sample apps, it is a camera specific project, it does not work well with emulators.
 
 ### Screenshot of Use case 1
 ![Screencast UX](./art/openCV.gif)
@@ -27,11 +29,15 @@ Support SDKs from **21** to **25**
 - [OpenCV 3.2.0](http://docs.opencv.org/trunk/d5/df8/tutorial_dev_with_OCV_on_Android.html) by OpenCV
 - [Camera 2 API](https://developer.android.com/reference/android/hardware/camera2/package-summary.html) by Google
 
-# References:
+# References
 - [Tutorial of OpenCV](http://www.learnopencv.com/image-recognition-and-object-detection-part1/) by Satya Mallick
 - [OpenCV Face detection sample app](https://github.com/opencv/opencv/tree/master/samples/android/face-detection) by OpenCV
 - [OpenCV for Secret Agents](https://www.packtpub.com/application-development/opencv-secret-agents) by Joseph Howse
 - [Android Camera 2 Basic sample app](https://github.com/googlesamples/android-Camera2Basic) by Google
+
+### Remarks
+- This is not a finished app, and it is only made for supporting presentations content.
+- Don´t expect to have complete functionalities or being error proof. For this you would need to contribute to the sample app or creating a brand new project with further support on other devices. It is only checked on Nexus 5 phone for instance.
 
 ### Contributions
 Please read first [CONTRIBUTING](./CONTRIBUTING.md)
