@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
 
 This sample app is basically made to support the following talks:
-- *Building a Minimum Viable Product (MVP) with Face recognition and AR in Android* at Droidcon London 2017
+- [Building a *"Minimum Viable Product"* (MVP) with *Face recognition* and *AR* in Android @ **Droidcon London 2017**](https://speakerdeck.com/raulh82vlc/building-a-minimum-viable-product-mvp-with-face-recognition-and-ar-in-android-at-droidcon-london-2017)
 - [Quest of a hero presentation slides @ Londroid April 2017](https://speakerdeck.com/raulh82vlc/quest-of-a-hero-at-londroid-april-2017) presentation
 
 ### Pre requirements to play the sample apps
